@@ -59,7 +59,13 @@ end
 getgenv().ED_AntiKick = {
     Enabled = true,
     SendNotifications = true,
-    CheckCaller = true,
+    CheckCaller = false, -- Changed to false to allow your own scripts
+    
+    -- Whitelist specific kick messages (won't block these)
+    Whitelist = {
+        -- Add kick messages you want to allow
+        -- Example: ["Restarting..."] = true,
+    },
     
     -- Statistics tracking
     Stats = {
@@ -93,6 +99,12 @@ end
 
 --// Kick interception handler
 local function HandleKickAttempt(kickReason)
+    -- Check whitelist
+    if config.Whitelist and config.Whitelist[tostring(kickReason)] then
+        warn("[Anti-Kick] Whitelisted kick, allowing:", kickReason)
+        return false -- Don't block
+    end
+    
     config.Stats.TotalKicksBlocked = config.Stats.TotalKicksBlocked + 1
     config.Stats.LastBlockedTime = os.time()
     config.Stats.LastBlockedReason = tostring(kickReason)
@@ -109,6 +121,8 @@ local function HandleKickAttempt(kickReason)
         config.Stats.TotalKicksBlocked,
         tostring(kickReason)
     ))
+    
+    return true -- Block the kick
 end
 
 --// Hook: __namecall metamethod
